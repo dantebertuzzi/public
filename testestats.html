@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Tabela Periódica dos Testes Estatísticos</title>
+    <style>
+        :root {
+            --primary-color: #1a237e;
+            --qualitativo-color: #e91e63;
+            --quantitativo-color: #2196f3;
+            --bg-color: #fafafa;
+            --card-bg: #fff;
+            --text-color: #212121;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+            --category-parametrico: #4CAF50;
+            --category-nao-parametrico: #F44336;
+            --category-correlacao: #9C27B0;
+            --category-proporcao: #FF9800;
+            --category-pareado: #2196F3;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #9ba8fa;
+            --qualitativo-color: #e91e63;
+            --quantitativo-color: #2196f3;
+            --bg-color: #121212;
+            --card-bg: #121212;
+            --text-color: #ffffff;
+            --shadow: 0 2px 8px rgba(0,0,0,0.3);
+
+            --category-parametrico: #81C784;
+            --category-nao-parametrico: #E57373;
+            --category-correlacao: #BA68C8;
+            --category-proporcao: #FFB74D;
+            --category-pareado: #64B5F6;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-color);
+            font-size: 2.5em;
+            margin-bottom: 40px;
+        }
+
+        .periodic-table {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* antes era 200px */
+            gap: 20px;
+            padding: 20px;
+            max-width: 1600px; /* aumente o max-width para caber mais colunas */
+            margin: 0 auto;
+        }
+
+        .test-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border-top: 4px solid transparent;
+            min-height: 110px;
+            max-height: 110px;
+            min-width: 110px;
+            max-width: 110px;
+            width: 100%;
+            height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            aspect-ratio: 1 / 1; /* Mantém quadrado mesmo se o grid mudar */
+        }
+
+        .test-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .test-card.qualitativo {
+            border-top: 4px solid var(--qualitativo-color);
+        }
+
+        .test-card.quantitativo {
+            border-top: 4px solid var(--quantitativo-color);
+        }
+
+        .test-card.filtered {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* Cores das categorias nos cards */
+        .test-card[data-categories*="parametrico"] { 
+            border-top-color: var(--category-parametrico);
+        }
+        .test-card[data-categories*="nao_parametrico"] { 
+            border-top-color: var(--category-nao-parametrico);
+        }
+        .test-card[data-categories*="correlacao"] { 
+            border-top-color: var(--category-correlacao);
+        }
+        .test-card[data-categories*="proporcao"] { 
+            border-top-color: var(--category-proporcao);
+        }
+        .test-card[data-categories*="pareado"] { 
+            border-top-color: var(--category-pareado);
+        }
+
+        /* Adicionar indicador de múltiplas categorias */
+        .test-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .test-card[data-categories~="pareado"][data-categories~="parametrico"]::before,
+        .test-card[data-categories~="pareado"][data-categories~="nao_parametrico"]::before,
+        .test-card[data-categories~="correlacao"][data-categories~="parametrico"]::before,
+        .test-card[data-categories~="correlacao"][data-categories~="nao_parametrico"]::before {
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 15px solid var(--category-pareado);
+            transform: rotate(45deg);
+            transform-origin: top right;
+        }
+
+        .test-symbol {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .test-name {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: var(--text-color);
+            width: 100%;
+            word-break: break-word;
+            line-height: 1.1;
+            max-height: 2.4em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            display: block;
+        }
+
+        /* Diminui o font-size se o texto for grande usando clamp e media query para responsividade */
+        .test-name {
+            font-size: clamp(0.9em, 1.2em, 1.2em);
+        }
+
+        .test-name:has(br), 
+        .test-name:has(span), 
+        .test-name:has(em), 
+        .test-name:has(strong) {
+            font-size: 1em;
+        }
+
+        /* Ajuste automático para nomes muito longos */
+        .test-name.long {
+            font-size: 1em;
+            max-height: 2.2em;
+            line-height: 1.05;
+            word-break: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+        }
+
+        /* Opcional: ajuste JS para nomes longos */
+
+        .test-details {
+            font-size: 0.9em;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .test-type {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.8em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+        }
+
+        .test-type.qualitativo {
+            background: var(--qualitativo-color);
+        }
+
+        .test-type.quantitativo {
+            background: var(--quantitativo-color);
+        }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .filters select, .filters input {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .test-info {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            display: none;
+            z-index: 1000;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .categories {
+            margin-top: 40px;
+            padding: 20px;
+            background: transparent;
+            border-radius: 8px;
+            box-shadow: none;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .categories-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .categories-col {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .category-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .category-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .category-btn::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        /* Cores dos quadrados para cada categoria */
+        .category-btn[data-category="parametrico"]::before {
+            background: var(--category-parametrico);
+        }
+
+        .category-btn[data-category="nao_parametrico"]::before {
+            background: var(--category-nao-parametrico);
+        }
+
+        .category-btn[data-category="correlacao"]::before {
+            background: var(--category-correlacao);
+        }
+
+        .category-btn[data-category="proporcao"]::before {
+            background: var(--category-proporcao);
+        }
+
+        .category-btn[data-category="pareado"]::before {
+            background: var(--category-pareado);
+        }
+
+        .category-btn[data-category="todos"]::before {
+            background: linear-gradient(45deg,
+                var(--category-parametrico) 20%,
+                var(--category-nao-parametrico) 20% 40%,
+                var(--category-correlacao) 40% 60%,
+                var(--category-proporcao) 60% 80%,
+                var(--category-pareado) 80%
+            );
+        }
+
+        .category-btn:hover {
+            opacity: 0.8;
+        }
+
+        .category-btn.active {
+            font-weight: 600;
+        }
+
+        /* Remover estilos anteriores de border e background */
+        .category-btn[data-category] {
+            border: none;
+            background: transparent;
+        }
+
+        .category-btn[data-category].active {
+            background: transparent;
+            color: var(--text-color);
+        }
+
+        .category-description {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        /* Estilos para os novos botões de grupo */
+        .group-category-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .group-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .group-btn:hover {
+            opacity: 0.8;
+        }
+
+        .group-btn.active {
+            font-weight: 600;
+        }
+
+        .group-category-description {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        .type-category-buttons {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .type-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .type-btn::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        /* Cores dos quadrados para cada tipo */
+        .type-btn[data-type="qualitativo"]::before {
+            background: var(--qualitativo-color);
+        }
+
+        .type-btn[data-type="quantitativo"]::before {
+            background: var(--quantitativo-color);
+        }
+
+        .type-btn[data-type="todos"]::before {
+            background: linear-gradient(45deg,
+                var(--qualitativo-color) 50%,
+                var(--quantitativo-color) 50%
+            );
+        }
+
+        .type-btn:hover {
+            opacity: 0.8;
+        }
+
+        .type-btn.active {
+            font-weight: 600;
+        }
+
+        .amostra-category-buttons {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .amostra-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .amostra-btn:hover {
+            opacity: 0.8;
+        }
+
+        .amostra-btn.active {
+            font-weight: 600;
+        }
+
+        .amostra-category-description {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        .tamanhoamostra-category-buttons {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .tamanhoamostra-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .tamanhoamostra-btn:hover {
+            opacity: 0.8;
+        }
+
+        .tamanhoamostra-btn.active {
+            font-weight: 600;
+        }
+
+        .tamanhoamostra-category-description {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        /* Adicione ao seu CSS para colorir o fundo do card conforme o tipo de amostra */
+        .test-card[data-amostra="independente"] {
+            background: linear-gradient(135deg, var(--card-bg) 70%, #e3f2fd 100%);
+        }
+        .test-card[data-amostra="pareada"] {
+            background: linear-gradient(135deg, var(--card-bg) 70%, #fce4ec 100%);
+        }
+
+        /* Adicione ao seu CSS para mostrar um quadrado colorido ao lado das opções de amostra */
+        .amostra-btn[data-amostra="independente"]::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-right: 8px;
+            background: #e3f2fd;
+            vertical-align: middle;
+        }
+        .amostra-btn[data-amostra="pareada"]::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-right: 8px;
+            background: #fce4ec;
+            vertical-align: middle;
+        }
+        .amostra-btn[data-amostra="todos"]::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-right: 8px;
+            background: linear-gradient(45deg, #e3f2fd 50%, #fce4ec 50%);
+            vertical-align: middle;
+        }
+
+        [data-theme="dark"] .test-card[data-amostra="independente"] {
+            background: linear-gradient(135deg, var(--card-bg) 70%, #233447 100%);
+        }
+        [data-theme="dark"] .test-card[data-amostra="pareada"] {
+            background: linear-gradient(135deg, var(--card-bg) 70%, #3a2232 100%);
+        }
+        [data-theme="dark"] .amostra-btn[data-amostra="independente"]::before {
+            background: #233447;
+        }
+        [data-theme="dark"] .amostra-btn[data-amostra="pareada"]::before {
+            background: #3a2232;
+        }
+        [data-theme="dark"] .amostra-btn[data-amostra="todos"]::before {
+            background: linear-gradient(45deg, #233447 50%, #3a2232 50%);
+        }
+
+        @media (max-width: 768px) {
+            .periodic-table {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        /* MOBILE OPTIMIZAÇÃO */
+        @media (max-width: 900px) {
+            .periodic-table {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 12px;
+                padding: 10px;
+                max-width: 100vw;
+            }
+            .test-card {
+                min-width: 90px;
+                max-width: 100px;
+                min-height: 90px;
+                max-height: 120px;
+                padding: 10px;
+                font-size: 0.95em;
+                height: 120px;
+            }
+            .test-symbol {
+                font-size: 1.3em;
+                margin-bottom: 6px;
+            }
+            .test-name {
+                font-size: 1em;
+                margin-bottom: 8px;
+                max-height: 2.1em;
+            }
+            .test-type {
+                font-size: 0.7em;
+                top: 6px;
+                right: 6px;
+                padding: 2px 6px;
+            }
+            .test-groups-indicator {
+                font-size: 0.9em !important;
+                bottom: 6px !important;
+                right: 8px !important;
+                padding: 1px 5px !important;
+            }
+            .categories {
+                padding: 8px 2vw;
+                margin-top: 16px;
+                max-width: 100vw;
+            }
+            .categories-row {
+                flex-direction: column;
+                gap: 8px;
+                margin-top: 8px;
+            }
+            .categories-col {
+                min-width: 0;
+                width: 100%;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+            .category-buttons,
+            .group-category-buttons,
+            .type-category-buttons,
+            .amostra-category-buttons,
+            .tamanhoamostra-category-buttons {
+                flex-wrap: wrap;
+                gap: 8px;
+                justify-content: center;
+                margin-bottom: 10px;
+            }
+            .category-btn,
+            .group-btn,
+            .type-btn,
+            .amostra-btn,
+            .tamanhoamostra-btn {
+                padding: 6px 8px;
+                font-size: 0.98em;
+                min-width: 0;
+                border-radius: 4px;
+            }
+            .categories-title {
+                font-size: 1em;
+                margin-bottom: 4px;
+            }
+            .test-info {
+                padding: 10px;
+                font-size: 0.98em;
+                max-width: 98vw;
+                width: 98vw;
+                left: 1vw;
+                transform: none;
+                border-radius: 8px;
+            }
+            #toggle-theme {
+                top: 10px !important;
+                right: 10px !important;
+                padding: 6px !important;
+                font-size: 1.1em !important;
+            }
+        }
+        @media (max-width: 500px) {
+            .periodic-table {
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                gap: 7px;
+                padding: 2px;
+            }
+            .test-card {
+                min-width: 70px;
+                max-width: 90px;
+                min-height: 70px;
+                max-height: 90px;
+                padding: 6px;
+                font-size: 0.9em;
+                height: 90px;
+            }
+            .test-symbol {
+                font-size: 1em;
+                margin-bottom: 3px;
+            }
+            .test-name {
+                font-size: 0.95em;
+                margin-bottom: 4px;
+                max-height: 2em;
+            }
+            .test-type {
+                font-size: 0.65em;
+                top: 3px;
+                right: 3px;
+                padding: 1px 4px;
+            }
+            .test-groups-indicator {
+                font-size: 0.8em !important;
+                bottom: 3px !important;
+                right: 4px !important;
+                padding: 0 3px !important;
+            }
+            .categories-title {
+                font-size: 0.98em;
+                margin-bottom: 2px;
+            }
+            .test-info {
+                padding: 6px;
+                font-size: 0.93em;
+                border-radius: 6px;
+            }
+            #toggle-theme {
+                top: 4px !important;
+                right: 4px !important;
+                padding: 4px !important;
+                font-size: 1em !important;
+            }
+        }
+
+        .categories-title {
+            font-weight: 600;
+            font-size: 1.05em;
+            margin-bottom: 8px;
+            text-align: center;
+            letter-spacing: 0.01em;
+            color: var(--text-color);
+        }
+
+        /* Torna o botão do tema totalmente transparente */
+        #toggle-theme {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            color: var(--text-color);
+            transition: background 0.2s;
+        }
+
+        /* Remove o background dos botões das categorias e mantém só o ícone/colorido */
+        .category-btn,
+        .group-btn,
+        .type-btn,
+        .amostra-btn,
+        .tamanhoamostra-btn,
+        .normalidade-btn {
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Remova o título -->
+    <!-- <h1>Tabela Periódica dos Testes Estatísticos</h1> -->
+
+    <!-- Remova o input de busca e o select de tipo -->
+    <!--
+    <div class="filters">
+        <input type="text" id="search" placeholder="Pesquisar teste...">
+        <select id="tipo">
+            <option value="">Todos os tipos</option>
+            <option value="qualitativo">Qualitativos</option>
+            <option value="quantitativo">Quantitativos</option>
+        </select>
+    </div>
+    -->
+    
+    <div class="periodic-table" id="periodic-table"></div>
+    
+    <div class="test-info" id="test-info"></div>
+
+    <div class="categories">
+        <div class="categories-row">
+            <div class="categories-col">
+                <div class="categories-title">Categoria</div>
+                <div class="category-buttons">
+                    <button class="category-btn active" data-category="todos">Todos os Testes</button>
+                    <button class="category-btn" data-category="parametrico">Paramétricos</button>
+                    <button class="category-btn" data-category="nao_parametrico">Não Paramétricos</button>
+                    <button class="category-btn" data-category="correlacao">Correlação</button>
+                    <button class="category-btn" data-category="proporcao">Proporção</button>
+                    <button class="category-btn" data-category="pareado">Pareados</button>
+                </div>
+            </div>
+            <div class="categories-col">
+                <div class="categories-title">Grupos</div>
+                <div class="group-category-buttons">
+                    <button class="group-btn active" data-group="todos">Todos os Grupos</button>
+                    <button class="group-btn" data-group="1">1 Grupos</button>
+                    <button class="group-btn" data-group="2">2 Grupos</button>
+                    <button class="group-btn" data-group="2+">2+ Grupos</button>
+                    <button class="group-btn" data-group="3+">3+ Grupos</button>
+                </div>
+            </div>
+            <div class="categories-col">
+                <div class="categories-title">Tipo</div>
+                <div class="type-category-buttons">
+                    <button class="type-btn active" data-type="todos">Todos os Tipos</button>
+                    <button class="type-btn" data-type="qualitativo">Qualitativos</button>
+                    <button class="type-btn" data-type="quantitativo">Quantitativos</button>
+                </div>
+            </div>
+            <div class="categories-col">
+                <div class="categories-title">Amostra</div>
+                <div class="amostra-category-buttons">
+                    <button class="amostra-btn active" data-amostra="todos">Todas as Amostras</button>
+                    <button class="amostra-btn" data-amostra="independente">Independente</button>
+                    <button class="amostra-btn" data-amostra="pareada">Pareada</button>
+                </div>
+            </div>
+            <div class="categories-col">
+                <div class="categories-title">Tamanho</div>
+                <div class="tamanhoamostra-category-buttons">
+                    <button class="tamanhoamostra-btn active" data-tamanhoamostra="todos">Todos os Tamanhos</button>
+                    <button class="tamanhoamostra-btn" data-tamanhoamostra="pequena">Pequena</button>
+                    <button class="tamanhoamostra-btn" data-tamanhoamostra="pequena/média">Pequena/Média</button>
+                    <button class="tamanhoamostra-btn" data-tamanhoamostra="média/grande">Média/Grande</button>
+                    <button class="tamanhoamostra-btn" data-tamanhoamostra="grande">Grande</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Adicione este botão de alternância de tema logo após a abertura do <body> -->
+    <button id="toggle-theme" style="position:fixed;top:18px;right:18px;z-index:2000;padding:8px 18px;border-radius:6px;border:none;background:#222;color:#fff;cursor:pointer;font-size:1.3em;line-height:1;">🌙</button>
+
+    <script>
+        const testes = [
+            {
+                symbol: 'χ²',
+                name: 'Qui-Quadrado',
+                type: 'qualitativo',
+                details: 'Comparação de proporções em amostras grandes',
+                description: 'O teste Qui-Quadrado é utilizado para comparar proporções entre grupos em amostras grandes.',
+                grupos: '2+',
+                amostra: 'independente',
+                suposicoes: 'Amostra grande, frequências esperadas > 5',
+                escala: 'nominal',
+                finalidade: 'proporção',
+                tamanhoAmostra: 'grande',
+                robustezOutlier: true,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'Fi',
+                name: 'Fisher',
+                type: 'qualitativo',
+                details: 'Comparação de proporções em amostras pequenas',
+                description: 'O Teste Exato de Fisher é indicado para comparar proporções em amostras pequenas.',
+                grupos: '2',
+                amostra: 'independente',
+                suposicoes: 'Amostra pequena',
+                escala: 'nominal',
+                finalidade: 'proporção',
+                tamanhoAmostra: 'pequena',
+                robustezOutlier: true,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'T',
+                name: 'T de Student',
+                type: 'quantitativo',
+                details: 'Comparação de médias (distribuição normal)',
+                description: 'O Teste t de Student compara médias entre dois grupos quando os dados têm distribuição normal e variâncias iguais.',
+                grupos: '2',
+                amostra: 'independente',
+                suposicoes: 'Normalidade, variâncias iguais',
+                escala: 'intervalar/razão',
+                finalidade: 'comparação de médias',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral/unilateral'
+            },
+            {
+                symbol: 'MW',
+                name: 'Mann-Whitney',
+                type: 'quantitativo',
+                details: 'Comparação não-paramétrica de dois grupos',
+                description: 'O teste de Mann-Whitney é uma alternativa não paramétrica ao teste t para duas amostras independentes.',
+                grupos: '2',
+                amostra: 'independente',
+                suposicoes: 'Distribuição ordinal ou contínua, sem normalidade',
+                escala: 'ordinal/intervalar',
+                finalidade: 'comparação de medianas',
+                tamanhoAmostra: 'pequena/média',
+                robustezOutlier: true,
+                direcionalidade: 'bilateral/unilateral'
+            },
+            {
+                symbol: 'An',
+                name: 'ANOVA',
+                type: 'quantitativo',
+                details: 'Comparação de 3+ grupos (distribuição normal)',
+                description: 'A ANOVA compara médias entre três ou mais grupos com distribuição normal e variâncias iguais.',
+                grupos: '3+',
+                amostra: 'independente',
+                suposicoes: 'Normalidade, variâncias iguais',
+                escala: 'intervalar/razão',
+                finalidade: 'comparação de médias',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'KW',
+                name: 'Kruskal-Wallis',
+                type: 'quantitativo',
+                details: 'Comparação não-paramétrica de 3+ grupos',
+                description: 'O teste de Kruskal-Wallis é uma alternativa não paramétrica à ANOVA.',
+                grupos: '3+',
+                amostra: 'independente',
+                suposicoes: 'Distribuição ordinal ou contínua, sem normalidade',
+                escala: 'ordinal/intervalar',
+                finalidade: 'comparação de medianas',
+                tamanhoAmostra: 'pequena/média',
+                robustezOutlier: true,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'Tp',
+                name: 'T Pareado',
+                type: 'quantitativo',
+                details: 'Comparação de amostras pareadas normais',
+                description: 'O Teste t pareado compara médias de duas amostras relacionadas (pareadas) com distribuição normal.',
+                grupos: '2',
+                amostra: 'pareada',
+                suposicoes: 'Normalidade das diferenças',
+                escala: 'intervalar/razão',
+                finalidade: 'comparação de médias',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral/unilateral'
+            },
+            {
+                symbol: 'W',
+                name: 'Wilcoxon',
+                type: 'quantitativo',
+                details: 'Comparação não-paramétrica pareada',
+                description: 'O teste de Wilcoxon é uma alternativa não paramétrica ao teste t pareado.',
+                grupos: '2',
+                amostra: 'pareada',
+                suposicoes: 'Distribuição ordinal ou contínua, sem normalidade',
+                escala: 'ordinal/intervalar',
+                finalidade: 'comparação de medianas',
+                tamanhoAmostra: 'pequena/média',
+                robustezOutlier: true,
+                direcionalidade: 'bilateral/unilateral'
+            },
+            {
+                symbol: 'Pe',
+                name: 'Pearson',
+                type: 'quantitativo',
+                details: 'Correlação linear (distribuição normal)',
+                description: 'O coeficiente de Pearson mede a correlação linear entre duas variáveis quantitativas com distribuição normal.',
+                grupos: '2',
+                amostra: 'independente',
+                suposicoes: 'Normalidade, relação linear',
+                escala: 'intervalar/razão',
+                finalidade: 'correlação',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'Sp',
+                name: 'Spearman',
+                type: 'quantitativo',
+                details: 'Correlação não-paramétrica',
+                description: 'O coeficiente de Spearman mede a correlação entre duas variáveis quantitativas sem pressupor normalidade.',
+                grupos: '2',
+                amostra: 'independente',
+                suposicoes: 'Relação monotônica',
+                escala: 'ordinal/intervalar',
+                finalidade: 'correlação',
+                tamanhoAmostra: 'pequena/média',
+                robustezOutlier: true,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 't₁',
+                name: 'Teste t para uma amostra',
+                type: 'quantitativo',
+                details: 'Teste t para uma amostra',
+                description: 'Compara a média de uma amostra com um valor de referência conhecido.',
+                grupos: '1',
+                amostra: 'independente',
+                suposicoes: 'Normalidade, dados contínuos',
+                escala: 'intervalar/razão',
+                finalidade: 'comparação de médias',
+                tamanhoAmostra: 'pequena/média',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral/unilateral'
+            },
+            {
+                symbol: 'W₁',
+                name: 'Wilcoxon para uma amostra',
+                type: 'quantitativo',
+                details: 'Teste de Wilcoxon para uma amostra',
+                description: 'Compara a mediana de uma amostra com um valor de referência conhecido (alternativa não-paramétrica ao t de uma amostra).',
+                grupos: '1',
+                amostra: 'independente',
+                suposicoes: 'Distribuição ordinal ou contínua, sem normalidade',
+                escala: 'ordinal/intervalar',
+                finalidade: 'comparação de medianas',
+                tamanhoAmostra: 'pequena/média',
+                robustezOutlier: true,
+                direcionalidade: 'bilateral/unilateral'
+            },
+            {
+                symbol: 'Bi',
+                name: 'Teste Binomial',
+                type: 'qualitativo',
+                details: 'Teste binomial para proporção',
+                description: 'Compara a proporção observada de sucessos em uma amostra com uma proporção teórica.',
+                grupos: '1',
+                amostra: 'independente',
+                suposicoes: 'Dados binários, amostra pequena',
+                escala: 'nominal',
+                finalidade: 'proporção',
+                tamanhoAmostra: 'pequena',
+                robustezOutlier: true,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'χ²gof',
+                name: 'Qui-Quadrado de Aderência',
+                type: 'qualitativo',
+                details: 'Qui-quadrado para aderência',
+                description: 'Testa se a distribuição observada de frequências difere de uma distribuição esperada.',
+                grupos: '1',
+                amostra: 'independente',
+                suposicoes: 'Frequências esperadas > 5',
+                escala: 'nominal',
+                finalidade: 'proporção',
+                tamanhoAmostra: 'grande',
+                robustezOutlier: true,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'McN',
+                name: 'McNemar',
+                type: 'qualitativo',
+                details: 'Teste de McNemar para proporções pareadas',
+                description: 'Compara proporções em amostras pareadas (dados dicotômicos).',
+                grupos: '2',
+                amostra: 'pareada',
+                suposicoes: 'Amostras pareadas, dados dicotômicos',
+                escala: 'nominal',
+                finalidade: 'proporção',
+                tamanhoAmostra: 'pequena/média',
+                robustezOutlier: true,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'An-rm',
+                name: 'ANOVA de Medidas Repetidas',
+                type: 'quantitativo',
+                details: 'ANOVA para 3+ grupos pareados',
+                description: 'Compara médias de três ou mais grupos pareados com distribuição normal.',
+                grupos: '3+',
+                amostra: 'pareada',
+                suposicoes: 'Normalidade, esfericidade',
+                escala: 'intervalar/razão',
+                finalidade: 'comparação de médias',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'Fried',
+                name: 'Friedman',
+                type: 'quantitativo',
+                details: 'Teste de Friedman para 3+ grupos pareados',
+                description: 'Alternativa não-paramétrica à ANOVA de medidas repetidas.',
+                grupos: '3+',
+                amostra: 'pareada',
+                suposicoes: 'Distribuição ordinal ou contínua, sem normalidade',
+                escala: 'ordinal/intervalar',
+                finalidade: 'comparação de medianas',
+                tamanhoAmostra: 'pequena/média',
+                robustezOutlier: true,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'RMLR',
+                name: 'Regressão Logística para Medidas Repetidas',
+                type: 'qualitativo',
+                details: 'Regressão logística para medidas repetidas',
+                description: 'Modela variável dependente binária em dados pareados ou medidas repetidas.',
+                grupos: '2+',
+                amostra: 'pareada',
+                suposicoes: 'Independência das observações, ausência de multicolinearidade',
+                escala: 'nominal/intervalar',
+                finalidade: 'associação',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'An₂',
+                name: 'ANOVA Fatorial',
+                type: 'quantitativo',
+                details: 'ANOVA fatorial para 2+ fatores',
+                description: 'Compara médias entre grupos considerando dois ou mais fatores independentes.',
+                grupos: '3+',
+                amostra: 'independente',
+                suposicoes: 'Normalidade, variâncias iguais',
+                escala: 'intervalar/razão',
+                finalidade: 'comparação de médias',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'OLR',
+                name: 'Regressão Logística Ordinal',
+                type: 'qualitativo',
+                details: 'Regressão logística ordinal',
+                description: 'Modela variável dependente ordinal em relação a variáveis independentes.',
+                grupos: '2+',
+                amostra: 'independente',
+                suposicoes: 'Independência das observações, ausência de multicolinearidade',
+                escala: 'ordinal/intervalar',
+                finalidade: 'associação',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'FLR',
+                name: 'Regressão Logística Fatorial',
+                type: 'qualitativo',
+                details: 'Regressão logística fatorial',
+                description: 'Modela variável dependente binária considerando múltiplos fatores.',
+                grupos: '2+',
+                amostra: 'independente',
+                suposicoes: 'Independência das observações, ausência de multicolinearidade',
+                escala: 'nominal/intervalar',
+                finalidade: 'associação',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'SLR',
+                name: 'Regressão Linear Simples',
+                type: 'quantitativo',
+                details: 'Regressão linear simples',
+                description: 'Modela a relação entre uma variável dependente e uma independente quantitativa.',
+                grupos: '2+',
+                amostra: 'independente',
+                suposicoes: 'Normalidade dos resíduos, homocedasticidade, independência',
+                escala: 'intervalar/razão',
+                finalidade: 'associação',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'SLogR',
+                name: 'Regressão Logística Simples',
+                type: 'qualitativo',
+                details: 'Regressão logística simples',
+                description: 'Modela a relação entre uma variável dependente binária e uma independente.',
+                grupos: '2+',
+                amostra: 'independente',
+                suposicoes: 'Independência das observações, ausência de multicolinearidade',
+                escala: 'nominal/intervalar',
+                finalidade: 'associação',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'MLR',
+                name: 'Regressão Linear Múltipla',
+                type: 'quantitativo',
+                details: 'Regressão linear múltipla',
+                description: 'Modela a relação entre uma variável dependente e múltiplas independentes quantitativas.',
+                grupos: '2+',
+                amostra: 'independente',
+                suposicoes: 'Normalidade dos resíduos, homocedasticidade, independência',
+                escala: 'intervalar/razão',
+                finalidade: 'associação',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'ANCOVA',
+                name: 'ANCOVA',
+                type: 'quantitativo',
+                details: 'Análise de covariância',
+                description: 'Compara médias entre grupos ajustando para covariáveis quantitativas.',
+                grupos: '3+',
+                amostra: 'independente',
+                suposicoes: 'Normalidade, homogeneidade de variâncias, relação linear',
+                escala: 'intervalar/razão',
+                finalidade: 'comparação de médias',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'MLoR',
+                name: 'Regressão Logística Múltipla',
+                type: 'qualitativo',
+                details: 'Regressão logística múltipla',
+                description: 'Modela a relação entre uma variável dependente binária e múltiplas independentes.',
+                grupos: '2+',
+                amostra: 'independente',
+                suposicoes: 'Independência das observações, ausência de multicolinearidade',
+                escala: 'nominal/intervalar',
+                finalidade: 'associação',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'DA',
+                name: 'Análise Discriminante',
+                type: 'qualitativo',
+                details: 'Análise discriminante',
+                description: 'Classifica observações em grupos com base em variáveis preditoras.',
+                grupos: '2+',
+                amostra: 'independente',
+                suposicoes: 'Normalidade multivariada, covariância igual',
+                escala: 'intervalar/razão',
+                finalidade: 'classificação',
+                tamanhoAmostra: 'média/grande',
+                robustezOutlier: false,
+                direcionalidade: 'bilateral'
+            },
+            {
+                symbol: 'Q',
+                name: 'Q de Cochran',
+                type: 'qualitativo',
+                details: 'Teste Q de Cochran para proporções pareadas em 3+ grupos',
+                description: 'O Teste Q de Cochran é utilizado para comparar proporções em três ou mais grupos pareados (dados dicotômicos).',
+                grupos: '3+',
+                amostra: 'pareada',
+                suposicoes: 'Amostras pareadas, dados dicotômicos, 3 ou mais grupos',
+                escala: 'nominal',
+                finalidade: 'proporção',
+                tamanhoAmostra: 'pequena/média',
+                robustezOutlier: true,
+                direcionalidade: 'bilateral'
+            }
+        ];
+
+        // Categorias dos testes
+        const testCategories = {
+            'Qui-Quadrado': ['proporcao'],
+            'Fisher': ['proporcao'],
+            'T de Student': ['parametrico'],
+            'Mann-Whitney': ['nao_parametrico'],
+            'ANOVA': ['parametrico'],
+            'Kruskal-Wallis': ['nao_parametrico'],
+            'T Pareado': ['parametrico', 'pareado'],
+            'Wilcoxon': ['nao_parametrico', 'pareado'],
+            'Pearson': ['parametrico', 'correlacao'],
+            'Spearman': ['nao_parametrico', 'correlacao'],
+            'Teste t para uma amostra': ['parametrico'],
+            'Wilcoxon para uma amostra': ['nao_parametrico'],
+            'Teste Binomial': ['proporcao'],
+            'Qui-Quadrado de Aderência': ['proporcao'],
+            'McNemar': ['proporcao', 'pareado'],
+            'ANOVA de Medidas Repetidas': ['parametrico', 'pareado'],
+            'Friedman': ['nao_parametrico', 'pareado'],
+            'Regressão Logística para Medidas Repetidas': ['proporcao', 'pareado'],
+            'ANOVA Fatorial': ['parametrico'],
+            'Regressão Logística Ordinal': ['proporcao'],
+            'Regressão Logística Fatorial': ['proporcao'],
+            'Regressão Linear Simples': ['parametrico', 'correlacao'],
+            'Regressão Logística Simples': ['proporcao'],
+            'Regressão Linear Múltipla': ['parametrico', 'correlacao'],
+            'ANCOVA': ['parametrico'],
+            'Regressão Logística Múltipla': ['proporcao'],
+            'Análise Discriminante': ['proporcao'],
+            'Q de Cochran': ['proporcao', 'pareado']
+        };
+
+        function createTestCard(teste) {
+            const categories = testCategories[teste.name];
+            const categoryClasses = categories.map(cat => `category-${cat}`).join(' ');
+            // Exibe apenas symbol, name, grupos e type
+            return `
+                <div class="test-card ${teste.type}" 
+                     data-name="${teste.name.toLowerCase()}" 
+                     data-type="${teste.type}"
+                     data-categories="${categories.join(' ')}"
+                     data-group="${teste.grupos}"
+                     data-amostra="${teste.amostra || ''}"
+                     data-tamanhoamostra="${teste.tamanhoAmostra || ''}">
+                    <div class="test-type ${teste.type}">${teste.type}</div>
+                    <div class="test-symbol">${teste.symbol}</div>
+                    <div class="test-name">${teste.name}</div>
+                    <div class="test-groups-indicator" style="position:absolute;bottom:10px;right:14px;font-size:1.1em;font-weight:bold;opacity:0.7;color:var(--primary-color);background:var(--card-bg);padding:2px 8px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.07);">${teste.grupos}</div>
+                    ${categories.length > 1 ? '<div class="multi-category-indicator"></div>' : ''}
+                </div>
+            `;
+        }
+
+        function renderTests() {
+            const container = document.getElementById('periodic-table');
+            // Separe qualitativos e quantitativos
+            const qualitativos = testes.filter(t => t.type === 'qualitativo');
+            const quantitativos = testes.filter(t => t.type === 'quantitativo');
+            // Junte: qualitativos primeiro, depois quantitativos
+            const ordenados = qualitativos.concat(quantitativos);
+            container.innerHTML = ordenados.map(createTestCard).join('');
+
+            // Ajusta a classe .long para nomes grandes
+            document.querySelectorAll('.test-card .test-name').forEach(el => {
+                if (el.textContent.length > 28) {
+                    el.classList.add('long');
+                }
+            });
+
+            document.querySelectorAll('.test-card').forEach(card => {
+                card.addEventListener('click', () => showTestInfo(card.querySelector('.test-name').textContent));
+            });
+        }
+
+        function showTestInfo(testName) {
+            const teste = testes.find(t => t.name === testName);
+            const infoDiv = document.getElementById('test-info');
+            infoDiv.innerHTML = `
+                <h3>${teste.name}</h3>
+                <p>${teste.description}</p>
+                <ul style="font-size:0.95em;line-height:1.5;">
+                    <li><strong>Nº de grupos:</strong> ${teste.grupos}</li>
+                    <li><strong>Amostra:</strong> ${teste.amostra}</li>
+                    <li><strong>Suposições:</strong> ${teste.suposicoes}</li>
+                    <li><strong>Escala:</strong> ${teste.escala}</li>
+                    <li><strong>Finalidade:</strong> ${teste.finalidade}</li>
+                    <li><strong>Tamanho da amostra:</strong> ${teste.tamanhoAmostra}</li>
+                    <li><strong>Robusto a outliers:</strong> ${teste.robustezOutlier ? 'Sim' : 'Não'}</li>
+                    <li><strong>Direcionalidade:</strong> ${teste.direcionalidade}</li>
+                </ul>
+            `;
+            infoDiv.style.display = 'block';
+
+            // Remove qualquer listener antigo antes de adicionar um novo
+            document.onclick = null;
+            setTimeout(() => {
+                document.onclick = (e) => {
+                    // Fecha o modal se clicar fora dele
+                    if (!infoDiv.contains(e.target)) {
+                        infoDiv.style.display = 'none';
+                        document.onclick = null;
+                    }
+                };
+            }, 0);
+        }
+
+        // Estado global para filtros ativos
+        let activeCategory = 'todos';
+        let activeGroup = 'todos';
+        // Novos filtros
+        let activeType = '';
+        let activeSearch = '';
+        let activeAmostra = 'todos';
+        let activeTamanhoAmostra = 'todos';
+
+        // Atualiza a função updateFilters:
+        function updateFilters() {
+            document.querySelectorAll('.test-card').forEach(card => {
+                const testName = card.querySelector('.test-name').textContent;
+                const matchesCategory = (activeCategory === 'todos') || (testCategories[testName]?.includes(activeCategory));
+                const group = card.dataset.group;
+                let matchesGroup = true;
+                if (activeGroup !== 'todos') {
+                    if (activeGroup === '3+') {
+                        matchesGroup = (group === '3+' || group === '4+' || group === '5+');
+                    } else {
+                        matchesGroup = (group === activeGroup);
+                    }
+                }
+                const amostra = card.getAttribute('data-amostra');
+                const tamanhoAmostra = card.getAttribute('data-tamanhoamostra');
+                const matchesAmostra = (activeAmostra === 'todos') || (amostra === activeAmostra);
+                const matchesTamanhoAmostra = (activeTamanhoAmostra === 'todos') || (tamanhoAmostra === activeTamanhoAmostra);
+                const matchesType = (activeType === '' || card.dataset.type === activeType);
+
+                if (matchesCategory && matchesGroup && matchesAmostra && matchesTamanhoAmostra && matchesType) {
+                    card.style.opacity = '1';
+                    card.style.pointerEvents = 'auto';
+                    card.classList.remove('filtered');
+                    if (activeCategory !== 'todos') {
+                        card.style.borderTopColor = `var(--category-${activeCategory})`;
+                    } else {
+                        card.style.borderTopColor = '';
+                    }
+                } else {
+                    card.style.opacity = '0.3';
+                    card.style.pointerEvents = 'none';
+                    card.classList.add('filtered');
+                }
+            });
+
+            // Opacidade dos botões de categoria
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                if (btn.dataset.category === activeCategory) {
+                    btn.classList.add('active');
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                } else {
+                    btn.classList.remove('active');
+                    btn.style.opacity = '0.4';
+                    btn.style.pointerEvents = 'auto';
+                }
+            });
+
+            // Opacidade dos botões de grupo
+            document.querySelectorAll('.group-btn').forEach(btn => {
+                if (btn.dataset.group === activeGroup) {
+                    btn.classList.add('active');
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                } else {
+                    btn.classList.remove('active');
+                    btn.style.opacity = '0.4';
+                    btn.style.pointerEvents = 'auto';
+                }
+            });
+
+            // Opacidade dos botões de tipo
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                if (btn.dataset.type === activeType || (activeType === '' && btn.dataset.type === 'todos')) {
+                    btn.classList.add('active');
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                } else {
+                    btn.classList.remove('active');
+                    btn.style.opacity = '0.4';
+                    btn.style.pointerEvents = 'auto';
+                }
+            });
+
+            // Opacidade dos botões de amostra
+            document.querySelectorAll('.amostra-btn').forEach(btn => {
+                if (btn.dataset.amostra === activeAmostra) {
+                    btn.classList.add('active');
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                } else {
+                    btn.classList.remove('active');
+                    btn.style.opacity = '0.4';
+                    btn.style.pointerEvents = 'auto';
+                }
+            });
+
+            // Opacidade dos botões de tamanho da amostra
+            document.querySelectorAll('.tamanhoamostra-btn').forEach(btn => {
+                if (btn.dataset.tamanhoamostra === activeTamanhoAmostra) {
+                    btn.classList.add('active');
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                } else {
+                    btn.classList.remove('active');
+                    btn.style.opacity = '0.4';
+                    btn.style.pointerEvents = 'auto';
+                }
+            });
+        }
+
+        // Eventos para filtro de categoria
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            const tooltips = {
+                'todos': 'Mostrar todos os testes',
+                'parametrico': 'Testes que assumem distribuição normal dos dados',
+                'nao_parametrico': 'Testes que não requerem distribuição normal dos dados',
+                'correlacao': 'Testes para medir a relação entre variáveis',
+                'proporcao': 'Testes para comparar proporções entre grupos',
+                'pareado': 'Testes para amostras pareadas ou dependentes'
+            };
+            btn.title = tooltips[btn.dataset.category] || '';
+            btn.addEventListener('click', () => {
+                activeCategory = btn.dataset.category;
+                updateFilters();
+            });
+        });
+        document.querySelectorAll('.group-btn').forEach(btn => {
+            const tooltips = {
+                'todos': 'Mostrar testes para qualquer número de grupos',
+                '1': 'Mostrar testes para 1 grupos',
+                '2': 'Mostrar testes para 2 grupos',
+                '2+': 'Mostrar testes para 2+ grupos',
+                '3+': 'Mostrar testes para 3 ou mais grupos'
+            };
+            btn.title = tooltips[btn.dataset.group] || '';
+            btn.addEventListener('click', () => {
+                activeGroup = btn.dataset.group;
+                updateFilters();
+            });
+        });
+        document.querySelectorAll('.type-btn').forEach(btn => {
+            const tooltips = {
+                'todos': 'Mostrar todos os tipos',
+                'qualitativo': 'Mostrar apenas testes qualitativos',
+                'quantitativo': 'Mostrar apenas testes quantitativos'
+            };
+            btn.title = tooltips[btn.dataset.type] || '';
+            btn.addEventListener('click', () => {
+                activeType = btn.dataset.type === 'todos' ? '' : btn.dataset.type;
+                updateFilters();
+            });
+        });
+        document.querySelectorAll('.amostra-btn').forEach(btn => {
+            const tooltips = {
+                'todos': 'Mostrar todos os tipos de amostra',
+                'independente': 'Mostrar testes para amostras independentes',
+                'pareada': 'Mostrar testes para amostras pareadas'
+            };
+            btn.title = tooltips[btn.dataset.amostra] || '';
+            btn.addEventListener('click', () => {
+                activeAmostra = btn.dataset.amostra;
+                updateFilters();
+            });
+        });
+        document.querySelectorAll('.tamanhoamostra-btn').forEach(btn => {
+            const tooltips = {
+                'todos': 'Mostrar todos os tamanhos de amostra',
+                'pequena': 'Mostrar testes para amostras pequenas',
+                'pequena/média': 'Mostrar testes para amostras pequenas ou médias',
+                'média/grande': 'Mostrar testes para amostras médias ou grandes',
+                'grande': 'Mostrar testes para amostras grandes'
+            };
+            btn.title = tooltips[btn.dataset.tamanhoamostra] || '';
+            btn.addEventListener('click', () => {
+                activeTamanhoAmostra = btn.dataset.tamanhoamostra;
+                updateFilters();
+            });
+        });
+
+        // Inicialização
+        renderTests();
+        updateFilters();
+
+        // Alternância de tema
+        const toggleThemeBtn = document.getElementById('toggle-theme');
+        let darkTheme = false;
+
+        toggleThemeBtn.addEventListener('click', () => {
+            darkTheme = !darkTheme;
+            if (darkTheme) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                toggleThemeBtn.textContent = '🌙 Tema Claro';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                toggleThemeBtn.textContent = '🌙 Tema Escuro';
+            }
+        });
+
+
+        const themeBtn = document.getElementById('toggle-theme');
+        function setTheme(dark) {
+            if (dark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeBtn.textContent = '☀️';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                themeBtn.textContent = '🌙';
+            }
+        }
+        let dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(dark);
+        themeBtn.onclick = () => {
+            dark = !dark;
+            setTheme(dark);
+        };
+    </script>
+</body>
+</html>
