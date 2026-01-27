@@ -21,3 +21,5 @@
 9) $$f(x)=\frac{(x^3+2x)\,\ln(x)}{x^2-1}$$
 
 10) $$f(x)=\frac{e^{x^2}(x-2)}{x^2+1}$$
+
+    https://chatgpt.com/share/697894b6-3428-800f-90ef-a0e52ebd4fa6
