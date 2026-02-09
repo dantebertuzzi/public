@@ -1,3 +1,7 @@
+
+https://chatgpt.com/share/6989d694-0ea8-800f-a035-4e7385d31841
+
+
 ### A Pluto.jl notebook ###
 # v0.20.13
 
